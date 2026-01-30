@@ -45,7 +45,7 @@ app.post("/send", (req, res) => {
   });
 
   mqttClient.publish(
-    "device/esp32-01/control",
+    "device/esp32/control",
     payload,
     { qos: 1 },
     (err) => {
