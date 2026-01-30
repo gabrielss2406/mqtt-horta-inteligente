@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle da Horta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><span>🌱</span> Controle Horta</h1>
+        <div id="system-status" class="status-badge">
+            <div class="dot"></div>
+            <span id="status-text">Conectando...</span>
+        </div>
+    </header>
+
+    <main>
+        <label for="jsonInput">Comando JSON (Payload MQTT)</label>
+        <textarea id="jsonInput" spellcheck="false">{
+  "action": "regar_pimentas",
+  "duracao_segundos": 10
+}</textarea>
+
+        <button id="sendBtn">Enviar Comando 🚀</button>
+
+        <div id="responseOutput" class="response-area"></div>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
