@@ -1,17 +1,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-
-// === WiFi ===
-const char* ssid = "Gabriel_2.4GHz";
-const char* password = "senhasenha";
-
-// === MQTT ===
-const char* mqtt_server = "personal-mqtt-horta-inteligente.6v8shu.easypanel.host";
-const int mqtt_port = 1883;
-const char* mqtt_user = "esp32";
-const char* mqtt_password = "x7ofHxxAHsHbXA9VUN15";
-const char* client_id = "esp32-01";
+#include "config.h"
 
 // === Tópico ===
 const char* topic_control = "device/esp32/control";

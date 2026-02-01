@@ -1,0 +1,13 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+
+# Env
+.env
+
+# ESP
+esp/config.h
