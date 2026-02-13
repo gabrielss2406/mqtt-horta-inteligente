@@ -1,5 +1,6 @@
 // URLs relativas (funciona tanto no PC quanto acessando pelo celular na mesma rede)
 const API_URL = ""; 
+let activeTimer = null; // Guarda a referência do nosso setTimeout
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,14 +31,9 @@ async function checkHealth() {
     }
 }
 
-async function sendCommand(payload, buttonId) {
-    const btn = document.getElementById(buttonId);
+// Função para centralizar a lógica de envio do comando
+async function sendCommand(payload) {
     const output = document.getElementById('responseOutput');
-    const originalBtnText = btn.innerText;
-
-    // UI Feedback
-    btn.disabled = true;
-    btn.innerText = "Enviando...";
     output.style.display = 'none';
     output.className = 'response-area';
 
@@ -55,14 +51,22 @@ async function sendCommand(payload, buttonId) {
         output.innerHTML = `<strong>Sucesso!</strong><br>${JSON.stringify(result, null, 2)}`;
         output.style.display = 'block';
 
+        return true; // Retorna sucesso
     } catch (err) {
         output.innerHTML = `<strong>Erro:</strong> ${err.message}`;
         output.className = 'response-area error';
         output.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.innerText = originalBtnText;
+        return false; // Retorna falha
     }
+}
+
+// Gerencia o estado visual dos botões
+function setUiLockState(isLocked) {
+    const executeBtn = document.getElementById('executeBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    executeBtn.disabled = isLocked;
+    stopBtn.disabled = !isLocked;
 }
 
 async function sendExecutionCommand() {
@@ -78,10 +82,32 @@ async function sendExecutionCommand() {
     }
 
     const payload = { mode: "execution", duration: duration };
-    await sendCommand(payload, 'executeBtn');
+    const success = await sendCommand(payload);
+
+    if (success) {
+        setUiLockState(true);
+
+        // Se já existir um timer, limpa para evitar múltiplos timers
+        if (activeTimer) clearTimeout(activeTimer);
+
+        // Cria um novo timer que reverte o estado da UI após a duração
+        activeTimer = setTimeout(() => {
+            setUiLockState(false);
+            activeTimer = null;
+        }, duration * 1000);
+    }
 }
 
 async function sendStopCommand() {
     const payload = { mode: "stop" };
-    await sendCommand(payload, 'stopBtn');
+    const success = await sendCommand(payload);
+
+    if (success) {
+        // Limpa o timer pendente, se houver
+        if (activeTimer) {
+            clearTimeout(activeTimer);
+            activeTimer = null;
+        }
+        setUiLockState(false);
+    }
 }
