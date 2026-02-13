@@ -3,11 +3,32 @@
 #include <ArduinoJson.h>
 #include "config.h"
 
+// === Pinos ===
+#define PIN_D4 4  // GPIO4 no ESP32
+
 // === Tópico ===
 const char* topic_control = "device/esp32/control";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// === Controle de execução ===
+unsigned long executionStartTime = 0;
+unsigned long executionDuration = 0;
+bool isExecuting = false;
+
+// =====================
+// Função para parar execução
+// =====================
+void stopExecution() {
+  if (isExecuting) {
+    digitalWrite(PIN_D4, LOW);
+    isExecuting = false;
+    Serial.println("🛑 Execução INTERROMPIDA - D4 DESLIGADO");
+  } else {
+    Serial.println("⚠️ Nenhuma execução em andamento");
+  }
+}
 
 // =====================
 // WiFi
@@ -45,7 +66,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   Serial.println(message);
 
-  // Tenta parsear JSON (opcional, só pra debug)
+  // Parse JSON
   StaticJsonDocument<256> doc;
   DeserializationError error = deserializeJson(doc, message);
 
@@ -58,6 +79,50 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println("📦 JSON parseado com sucesso:");
   serializeJsonPretty(doc, Serial);
   Serial.println();
+
+  // Verifica o modo
+  const char* mode = doc["mode"];
+
+  if (mode == nullptr) {
+    Serial.println("⚠️ Campo 'mode' não encontrado");
+    return;
+  }
+
+  // Modo STOP - interrompe execução
+  if (strcmp(mode, "stop") == 0) {
+    stopExecution();
+    return;
+  }
+
+  // Modo EXECUTION - inicia execução
+  if (strcmp(mode, "execution") == 0) {
+    int duration = doc["duration"];
+
+    if (duration <= 0) {
+      Serial.println("⚠️ Duration inválido ou não encontrado");
+      return;
+    }
+
+    // Se já está executando, interrompe a execução anterior
+    if (isExecuting) {
+      Serial.println("⚠️ Execução em andamento será substituída");
+      digitalWrite(PIN_D4, LOW);
+    }
+
+    Serial.print("⚡ Iniciando execução por ");
+    Serial.print(duration);
+    Serial.println(" segundos...");
+
+    // Ativa D4
+    digitalWrite(PIN_D4, HIGH);
+    
+    // Registra o tempo de início e duração
+    executionStartTime = millis();
+    executionDuration = duration * 1000UL; // Converte para milissegundos
+    isExecuting = true;
+
+    Serial.println("✅ D4 LIGADO");
+  }
 }
 
 // =====================
@@ -88,6 +153,10 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
+  // Configura o pino D4 como saída
+  pinMode(PIN_D4, OUTPUT);
+  digitalWrite(PIN_D4, LOW);
+
   Serial.println();
   Serial.println("============================");
   Serial.println("   ESP32 MQTT LISTENER");
@@ -109,4 +178,14 @@ void loop() {
     reconnect();
   }
   client.loop();
+
+  // Verifica se está em execução e se o tempo expirou
+  if (isExecuting) {
+    if (millis() - executionStartTime >= executionDuration) {
+      digitalWrite(PIN_D4, LOW);
+      isExecuting = false;
+      
+      Serial.println("⏹️ Execução finalizada - D4 DESLIGADO");
+    }
+  }
 }

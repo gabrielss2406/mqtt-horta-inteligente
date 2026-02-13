@@ -5,7 +5,8 @@ const API_URL = "";
 document.addEventListener('DOMContentLoaded', () => {
     checkHealth();
     setInterval(checkHealth, 5000); // Check a cada 5s
-    document.getElementById('sendBtn').addEventListener('click', sendData);
+    document.getElementById('executeBtn').addEventListener('click', sendExecutionCommand);
+    document.getElementById('stopBtn').addEventListener('click', sendStopCommand);
 });
 
 async function checkHealth() {
@@ -29,11 +30,11 @@ async function checkHealth() {
     }
 }
 
-async function sendData() {
-    const input = document.getElementById('jsonInput').value;
-    const btn = document.getElementById('sendBtn');
+async function sendCommand(payload, buttonId) {
+    const btn = document.getElementById(buttonId);
     const output = document.getElementById('responseOutput');
-    
+    const originalBtnText = btn.innerText;
+
     // UI Feedback
     btn.disabled = true;
     btn.innerText = "Enviando...";
@@ -41,17 +42,10 @@ async function sendData() {
     output.className = 'response-area';
 
     try {
-        let parsedBody;
-        try {
-            parsedBody = JSON.parse(input);
-        } catch (e) {
-            throw new Error("JSON inválido! Verifique aspas e vírgulas.");
-        }
-
         const res = await fetch(`${API_URL}/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(parsedBody)
+            body: JSON.stringify(payload)
         });
 
         const result = await res.json();
@@ -67,6 +61,27 @@ async function sendData() {
         output.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.innerText = "Enviar Comando 🚀";
+        btn.innerText = originalBtnText;
     }
+}
+
+async function sendExecutionCommand() {
+    const durationInput = document.getElementById('durationInput');
+    const duration = parseInt(durationInput.value, 10);
+
+    if (isNaN(duration) || duration <= 0) {
+        const output = document.getElementById('responseOutput');
+        output.innerHTML = "<strong>Erro:</strong> Duração inválida. Por favor, insira um número positivo.";
+        output.className = 'response-area error';
+        output.style.display = 'block';
+        return;
+    }
+
+    const payload = { mode: "execution", duration: duration };
+    await sendCommand(payload, 'executeBtn');
+}
+
+async function sendStopCommand() {
+    const payload = { mode: "stop" };
+    await sendCommand(payload, 'stopBtn');
 }
