@@ -4,7 +4,7 @@
 #include "config.h"
 
 // === Pinos ===
-#define PIN_D4 4  // GPIO4 no ESP32
+#define PIN_D23 23
 
 // === Tópico ===
 const char* topic_control = "device/esp32/control";
@@ -22,7 +22,7 @@ bool isExecuting = false;
 // =====================
 void stopExecution() {
   if (isExecuting) {
-    digitalWrite(PIN_D4, LOW);
+    digitalWrite(PIN_D23, LOW);
     isExecuting = false;
     Serial.println("🛑 Execução INTERROMPIDA - D4 DESLIGADO");
   } else {
@@ -106,7 +106,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // Se já está executando, interrompe a execução anterior
     if (isExecuting) {
       Serial.println("⚠️ Execução em andamento será substituída");
-      digitalWrite(PIN_D4, LOW);
+      digitalWrite(PIN_D23, LOW);
     }
 
     Serial.print("⚡ Iniciando execução por ");
@@ -114,7 +114,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println(" segundos...");
 
     // Ativa D4
-    digitalWrite(PIN_D4, HIGH);
+    digitalWrite(PIN_D23, HIGH);
     
     // Registra o tempo de início e duração
     executionStartTime = millis();
@@ -154,8 +154,8 @@ void setup() {
   delay(1000);
 
   // Configura o pino D4 como saída
-  pinMode(PIN_D4, OUTPUT);
-  digitalWrite(PIN_D4, LOW);
+  pinMode(PIN_D23, OUTPUT);
+  digitalWrite(PIN_D23, LOW);
 
   Serial.println();
   Serial.println("============================");
@@ -182,7 +182,7 @@ void loop() {
   // Verifica se está em execução e se o tempo expirou
   if (isExecuting) {
     if (millis() - executionStartTime >= executionDuration) {
-      digitalWrite(PIN_D4, LOW);
+      digitalWrite(PIN_D23, LOW);
       isExecuting = false;
       
       Serial.println("⏹️ Execução finalizada - D4 DESLIGADO");
