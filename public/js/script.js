@@ -4,7 +4,9 @@ let activeTimer = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Garante que o estado inicial da UI esteja correto
     checkAuthStatus();
+    
     checkHealth();
     setInterval(checkHealth, 5000);
 
@@ -17,18 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
 // === Gerenciamento de Autenticação ===
 function checkAuthStatus() {
     const token = localStorage.getItem('token');
-    if (token) {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('control-section').style.display = 'block';
+    const loginSection = document.getElementById('login-section');
+    const controlSection = document.getElementById('control-section');
+
+    // Se não houver token ou se for a string "null"/"undefined"
+    if (!token || token === 'null' || token === 'undefined') {
+        loginSection.style.display = 'block';
+        controlSection.style.display = 'none';
+        return false;
     } else {
-        document.getElementById('login-section').style.display = 'block';
-        document.getElementById('control-section').style.display = 'none';
+        loginSection.style.display = 'none';
+        controlSection.style.display = 'block';
+        return true;
     }
 }
 
 async function login() {
-    const password = document.getElementById('passwordInput').value;
+    const passwordInput = document.getElementById('passwordInput');
+    const password = passwordInput.value;
     const output = document.getElementById('responseOutput');
+
+    if (!password) {
+        output.innerHTML = "<strong>Erro:</strong> Digite uma senha.";
+        output.className = 'response-area error';
+        output.style.display = 'block';
+        return;
+    }
 
     try {
         const res = await fetch(`${API_URL}/login`, {
@@ -42,6 +58,7 @@ async function login() {
         if (!res.ok) throw new Error(data.error || "Erro ao fazer login");
 
         localStorage.setItem('token', data.token);
+        passwordInput.value = ""; // Limpa a senha
         checkAuthStatus();
         output.style.display = 'none';
     } catch (err) {
@@ -83,6 +100,13 @@ async function sendCommand(payload) {
     output.style.display = 'none';
     output.className = 'response-area';
 
+    if (!checkAuthStatus()) {
+        output.innerHTML = "<strong>Erro:</strong> Você precisa estar logado.";
+        output.className = 'response-area error';
+        output.style.display = 'block';
+        return false;
+    }
+
     const token = localStorage.getItem('token');
 
     try {
@@ -98,8 +122,8 @@ async function sendCommand(payload) {
         const result = await res.json();
 
         if (res.status === 401 || res.status === 403) {
-            logout(); // Token expirado ou inválido
-            throw new Error("Sessão expirada. Faça login novamente.");
+            logout();
+            throw new Error("Sessão expirada ou inválida. Faça login novamente.");
         }
 
         if (!res.ok) throw new Error(result.error || "Erro no servidor");
@@ -120,8 +144,8 @@ function setUiLockState(isLocked) {
     const executeBtn = document.getElementById('executeBtn');
     const stopBtn = document.getElementById('stopBtn');
 
-    executeBtn.disabled = isLocked;
-    stopBtn.disabled = !isLocked;
+    if (executeBtn) executeBtn.disabled = isLocked;
+    if (stopBtn) stopBtn.disabled = !isLocked;
 }
 
 async function sendExecutionCommand() {
