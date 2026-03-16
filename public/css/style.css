@@ -123,8 +123,8 @@ button:disabled { background: #555; cursor: not-allowed; }
 
 .response-area.error { border-left-color: #f44336; }
 
-/* === Novos Estilos para a Seção de Comando === */
-input[type="number"] {
+input[type="number"],
+input[type="password"] {
     width: 100%;
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid #444;
@@ -138,7 +138,8 @@ input[type="number"] {
     text-align: center;
 }
 
-input[type="number"]:focus {
+input[type="number"]:focus,
+input[type="password"]:focus {
     outline: none;
     border-color: var(--secondary);
 }
@@ -150,14 +151,15 @@ input[type="number"]:focus {
 }
 
 .action-btn {
-    flex-grow: 1; /* Permite que os botões cresçam igualmente */
-    width: auto;  /* Remove a largura fixa */
-    margin-top: 0; /* Remove a margem do topo */
+    flex-grow: 1;
+    width: auto;
+    margin-top: 0;
 }
 
 .stop-btn {
-    background: #c62828; /* Cor vermelha para o botão de parar */
+    background: #c62828;
 }
+
 .stop-btn:hover {
     background: #e53935;
 }
