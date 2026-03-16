@@ -121,7 +121,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     executionDuration = duration * 1000UL; // Converte para milissegundos
     isExecuting = true;
 
-    Serial.println("✅ D4 LIGADO");
+    Serial.println("✅ D23 LIGADO");
   }
 }
 

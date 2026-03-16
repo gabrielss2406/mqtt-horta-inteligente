@@ -1,15 +1,17 @@
 import express from "express";
-import cors from "cors";
 import { config } from "./src/config/settings.js";
-import routes from "./src/routes.js";
+import routes from "./src/routes/index.js";
+import { applySecurity } from "./src/middlewares/security.js";
 import { mqttService } from "./src/services/mqttService.js";
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// Middlewares de Segurança (Modularizado)
+applySecurity(app);
+
+// Middlewares Globais
 app.use(express.json());
-app.use(express.static("public")); // Serve o Frontend
+app.use(express.static("public"));
 
 // Rotas da API
 app.use(routes);

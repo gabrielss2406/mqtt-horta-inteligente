@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Controle da Horta</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
@@ -18,18 +18,28 @@
     </header>
 
     <main>
-        <div class="command-section">
-            <label for="durationInput">Duração (segundos):</label>
-            <input type="number" id="durationInput" value="10" min="1" max="3600">
-            <button id="executeBtn" class="action-btn">Ligar Horta 🌱</button>
-            <button id="stopBtn" class="action-btn stop-btn" disabled>Parar Horta 🛑</button>
+        <!-- Seção de Login -->
+        <div id="login-section">
+            <label for="passwordInput">Senha de Acesso:</label>
+            <input type="password" id="passwordInput" placeholder="Digite a senha...">
+            <button id="loginBtn">Entrar 🔐</button>
         </div>
 
-        
+        <!-- Seção de Controle (Escondida inicialmente) -->
+        <div id="control-section" style="display: none;">
+            <div class="command-section">
+                <label for="durationInput">Duração (segundos):</label>
+                <input type="number" id="durationInput" value="10" min="1" max="3600">
+                <button id="executeBtn" class="action-btn">Ligar Horta 🌱</button>
+                <button id="stopBtn" class="action-btn stop-btn" disabled>Parar Horta 🛑</button>
+            </div>
+            <button id="logoutBtn" style="background: transparent; color: #888; font-size: 0.8rem; margin-top: 20px; border: 1px solid #444;">Sair</button>
+        </div>
+
         <div id="responseOutput" class="response-area"></div>
     </main>
 </div>
 
-<script src="script.js"></script>
+<script src="js/script.js"></script>
 </body>
 </html>

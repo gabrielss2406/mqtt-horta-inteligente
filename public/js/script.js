@@ -1,15 +1,62 @@
-// URLs relativas (funciona tanto no PC quanto acessando pelo celular na mesma rede)
+// URLs relativas
 const API_URL = ""; 
-let activeTimer = null; // Guarda a referência do nosso setTimeout
+let activeTimer = null; 
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
     checkHealth();
-    setInterval(checkHealth, 5000); // Check a cada 5s
+    setInterval(checkHealth, 5000);
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('executeBtn').addEventListener('click', sendExecutionCommand);
     document.getElementById('stopBtn').addEventListener('click', sendStopCommand);
 });
 
+// === Gerenciamento de Autenticação ===
+function checkAuthStatus() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('control-section').style.display = 'block';
+    } else {
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('control-section').style.display = 'none';
+    }
+}
+
+async function login() {
+    const password = document.getElementById('passwordInput').value;
+    const output = document.getElementById('responseOutput');
+
+    try {
+        const res = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Erro ao fazer login");
+
+        localStorage.setItem('token', data.token);
+        checkAuthStatus();
+        output.style.display = 'none';
+    } catch (err) {
+        output.innerHTML = `<strong>Erro:</strong> ${err.message}`;
+        output.className = 'response-area error';
+        output.style.display = 'block';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    checkAuthStatus();
+}
+
+// === API e Controle ===
 async function checkHealth() {
     const statusEl = document.getElementById('system-status');
     const textEl = document.getElementById('status-text');
@@ -31,36 +78,44 @@ async function checkHealth() {
     }
 }
 
-// Função para centralizar a lógica de envio do comando
 async function sendCommand(payload) {
     const output = document.getElementById('responseOutput');
     output.style.display = 'none';
     output.className = 'response-area';
 
+    const token = localStorage.getItem('token');
+
     try {
         const res = await fetch(`${API_URL}/send`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(payload)
         });
 
         const result = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+            logout(); // Token expirado ou inválido
+            throw new Error("Sessão expirada. Faça login novamente.");
+        }
 
         if (!res.ok) throw new Error(result.error || "Erro no servidor");
 
         output.innerHTML = `<strong>Sucesso!</strong><br>${JSON.stringify(result, null, 2)}`;
         output.style.display = 'block';
 
-        return true; // Retorna sucesso
+        return true; 
     } catch (err) {
         output.innerHTML = `<strong>Erro:</strong> ${err.message}`;
         output.className = 'response-area error';
         output.style.display = 'block';
-        return false; // Retorna falha
+        return false;
     }
 }
 
-// Gerencia o estado visual dos botões
 function setUiLockState(isLocked) {
     const executeBtn = document.getElementById('executeBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -75,22 +130,17 @@ async function sendExecutionCommand() {
 
     if (isNaN(duration) || duration <= 0) {
         const output = document.getElementById('responseOutput');
-        output.innerHTML = "<strong>Erro:</strong> Duração inválida. Por favor, insira um número positivo.";
+        output.innerHTML = "<strong>Erro:</strong> Duração inválida.";
         output.className = 'response-area error';
         output.style.display = 'block';
         return;
     }
 
-    const payload = { mode: "execution", duration: duration };
-    const success = await sendCommand(payload);
+    const success = await sendCommand({ mode: "execution", duration });
 
     if (success) {
         setUiLockState(true);
-
-        // Se já existir um timer, limpa para evitar múltiplos timers
         if (activeTimer) clearTimeout(activeTimer);
-
-        // Cria um novo timer que reverte o estado da UI após a duração
         activeTimer = setTimeout(() => {
             setUiLockState(false);
             activeTimer = null;
@@ -99,11 +149,8 @@ async function sendExecutionCommand() {
 }
 
 async function sendStopCommand() {
-    const payload = { mode: "stop" };
-    const success = await sendCommand(payload);
-
+    const success = await sendCommand({ mode: "stop" });
     if (success) {
-        // Limpa o timer pendente, se houver
         if (activeTimer) {
             clearTimeout(activeTimer);
             activeTimer = null;
