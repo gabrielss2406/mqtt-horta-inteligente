@@ -17,9 +17,6 @@ unsigned long executionStartTime = 0;
 unsigned long executionDuration = 0;
 bool isExecuting = false;
 
-// =====================
-// Função para parar execução
-// =====================
 void stopExecution() {
   if (isExecuting) {
     digitalWrite(PIN_D23, LOW);
@@ -30,9 +27,6 @@ void stopExecution() {
   }
 }
 
-// =====================
-// WiFi
-// =====================
 void setup_wifi() {
   Serial.println();
   Serial.print("Conectando em ");
@@ -51,9 +45,6 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-// =====================
-// Callback MQTT
-// =====================
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("📥 Mensagem recebida [");
   Serial.print(topic);
@@ -66,7 +57,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   Serial.println(message);
 
-  // Parse JSON
   StaticJsonDocument<256> doc;
   DeserializationError error = deserializeJson(doc, message);
 
@@ -80,7 +70,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
   serializeJsonPretty(doc, Serial);
   Serial.println();
 
-  // Verifica o modo
   const char* mode = doc["mode"];
 
   if (mode == nullptr) {
@@ -88,13 +77,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-  // Modo STOP - interrompe execução
   if (strcmp(mode, "stop") == 0) {
     stopExecution();
     return;
   }
 
-  // Modo EXECUTION - inicia execução
   if (strcmp(mode, "execution") == 0) {
     int duration = doc["duration"];
 
@@ -103,7 +90,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
       return;
     }
 
-    // Se já está executando, interrompe a execução anterior
     if (isExecuting) {
       Serial.println("⚠️ Execução em andamento será substituída");
       digitalWrite(PIN_D23, LOW);
@@ -113,21 +99,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(duration);
     Serial.println(" segundos...");
 
-    // Ativa D4
     digitalWrite(PIN_D23, HIGH);
     
-    // Registra o tempo de início e duração
     executionStartTime = millis();
-    executionDuration = duration * 1000UL; // Converte para milissegundos
+    executionDuration = duration * 1000UL;
     isExecuting = true;
 
     Serial.println("✅ D23 LIGADO");
   }
 }
 
-// =====================
-// Reconnect MQTT
-// =====================
 void reconnect() {
   while (!client.connected()) {
     Serial.print("🔄 Conectando MQTT...");
@@ -146,14 +127,11 @@ void reconnect() {
   }
 }
 
-// =====================
-// Setup
-// =====================
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  // Configura o pino D4 como saída
   pinMode(PIN_D23, OUTPUT);
   digitalWrite(PIN_D23, LOW);
 
@@ -170,16 +148,12 @@ void setup() {
   Serial.println("✅ Setup completo!");
 }
 
-// =====================
-// Loop
-// =====================
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-  // Verifica se está em execução e se o tempo expirou
   if (isExecuting) {
     if (millis() - executionStartTime >= executionDuration) {
       digitalWrite(PIN_D23, LOW);

@@ -4,7 +4,7 @@ export const config = {
   server: {
     port: process.env.PORT || 3000,
     jwtSecret: process.env.JWT_SECRET || "sua_chave_secreta_super_segura",
-    adminPassword: process.env.ADMIN_PASSWORD || "admin123", // Senha padrão para teste
+    adminPassword: process.env.ADMIN_PASSWORD || "admin123",
   },
   mqtt: {
     host: process.env.MQTT_HOST,

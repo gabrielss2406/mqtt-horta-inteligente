@@ -5,7 +5,6 @@ export const login = (req, res) => {
   const { password } = req.body;
 
   if (password === config.server.adminPassword) {
-    // Gera o token (válido por 12 horas)
     const token = jwt.sign({ role: "admin" }, config.server.jwtSecret, {
       expiresIn: "12h",
     });
@@ -16,9 +15,8 @@ export const login = (req, res) => {
   return res.status(401).json({ auth: false, error: "Senha incorreta" });
 };
 
-// Middleware para verificar se o token é válido
 export const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1]; // Espera "Bearer <token>"
+  const token = req.headers["authorization"]?.split(" ")[1]; // Bearer Token
 
   if (!token) {
     return res.status(403).json({ auth: false, error: "Token não fornecido" });

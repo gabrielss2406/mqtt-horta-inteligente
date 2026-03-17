@@ -26,7 +26,7 @@ class MqttService {
     });
 
     this.client.on("message", (topic, message) => {
-      // Aqui você poderia salvar no banco de dados no futuro
+      // TODO - message history, analytics, etc.
       console.log(`📥 ACK [${topic}]:`, message.toString());
     });
   }
@@ -57,5 +57,4 @@ class MqttService {
   }
 }
 
-// Exporta uma instância única (Singleton)
 export const mqttService = new MqttService();

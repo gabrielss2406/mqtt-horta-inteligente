@@ -4,7 +4,6 @@ let activeTimer = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    // Garante que o estado inicial da UI esteja correto
     checkAuthStatus();
     
     checkHealth();
@@ -22,7 +21,6 @@ function checkAuthStatus() {
     const loginSection = document.getElementById('login-section');
     const controlSection = document.getElementById('control-section');
 
-    // Se não houver token ou se for a string "null"/"undefined"
     if (!token || token === 'null' || token === 'undefined') {
         loginSection.style.display = 'block';
         controlSection.style.display = 'none';
@@ -58,7 +56,7 @@ async function login() {
         if (!res.ok) throw new Error(data.error || "Erro ao fazer login");
 
         localStorage.setItem('token', data.token);
-        passwordInput.value = ""; // Limpa a senha
+        passwordInput.value = "";
         checkAuthStatus();
         output.style.display = 'none';
     } catch (err) {
