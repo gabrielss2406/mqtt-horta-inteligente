@@ -4,7 +4,9 @@ let activeTimer = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuthStatus();
+    if (checkAuthStatus()) {
+        fetchHistory();
+    }
     
     checkHealth();
     setInterval(checkHealth, 5000);
@@ -13,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logoutBtn').addEventListener('click', logout);
     document.getElementById('executeBtn').addEventListener('click', sendExecutionCommand);
     document.getElementById('stopBtn').addEventListener('click', sendStopCommand);
+    document.getElementById('refreshHistoryBtn').addEventListener('click', fetchHistory);
 });
 
 // === Gerenciamento de Autenticação ===
@@ -57,7 +60,9 @@ async function login() {
 
         localStorage.setItem('token', data.token);
         passwordInput.value = "";
-        checkAuthStatus();
+        if (checkAuthStatus()) {
+            fetchHistory();
+        }
         output.style.display = 'none';
     } catch (err) {
         output.innerHTML = `<strong>Erro:</strong> ${err.message}`;
@@ -90,6 +95,40 @@ async function checkHealth() {
     } catch (error) {
         statusEl.className = 'status-badge offline';
         textEl.innerText = 'API Offline';
+    }
+}
+
+async function fetchHistory() {
+    const historyList = document.getElementById('historyList');
+    const token = localStorage.getItem('token');
+
+    if (!token) return;
+
+    try {
+        const res = await fetch(`${API_URL}/history`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Erro ao carregar histórico");
+
+        if (data.length === 0) {
+            historyList.innerHTML = '<p style="color: #666; text-align: center;">Nenhuma execução registrada.</p>';
+            return;
+        }
+
+        historyList.innerHTML = data.map(item => {
+            const date = new Date(item.timestamp).toLocaleString('pt-BR');
+            return `
+                <div style="padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between;">
+                    <span style="color: #4CAF50;">🌱 Ativação</span>
+                    <span style="color: #ccc;">${item.duration}s</span>
+                    <span style="color: #888; font-size: 0.75rem;">${date}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        historyList.innerHTML = `<p style="color: #ff5252; text-align: center;">Erro: ${err.message}</p>`;
     }
 }
 
@@ -128,6 +167,10 @@ async function sendCommand(payload) {
 
         output.innerHTML = `<strong>Sucesso!</strong><br>${JSON.stringify(result, null, 2)}`;
         output.style.display = 'block';
+
+        if (payload.mode === 'execution') {
+            fetchHistory();
+        }
 
         return true; 
     } catch (err) {

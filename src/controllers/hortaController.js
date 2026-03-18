@@ -1,4 +1,5 @@
 import { mqttService } from "../services/mqttService.js";
+import redisClient from "../config/redis.js";
 
 export const sendCommand = async (req, res) => {
   try {
@@ -16,9 +17,22 @@ export const sendCommand = async (req, res) => {
             error: "Para o modo 'execution', 'duration' deve ser um número positivo."
           });
         }
-        payload = { mode, duration, timestamp: Date.now() };
-        break;
 
+        payload = { 
+          mode, 
+          duration, 
+          timestamp: Date.now()
+        };
+
+        try {
+          await redisClient.zAdd("horta:historico", [
+            { score: payload.timestamp, value: JSON.stringify(payload) }
+          ]);
+          await redisClient.expire("horta:historico", 7 * 24 * 60 * 60);
+        } catch (redisError) {
+          console.error("⚠️ Erro ao salvar no Redis:", redisError.message);
+        }
+        break;
       case "stop":
         payload = { mode, timestamp: Date.now() };
         break;
@@ -38,6 +52,20 @@ export const sendCommand = async (req, res) => {
       error: error.message, 
       sent: false 
     });
+  }
+};
+
+export const getHistory = async (_req, res) => {
+  try {
+    // Busca todos os registros do Sorted Set, do mais novo para o mais antigo
+    const history = await redisClient.zRange("horta:historico", 0, -1, { REV: true });
+    
+    // Converte as strings JSON de volta para objetos
+    const parsedHistory = history.map(item => JSON.parse(item));
+    
+    return res.json(parsedHistory);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao buscar histórico." });
   }
 };
 

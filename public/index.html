@@ -33,6 +33,18 @@
                 <button id="executeBtn" class="action-btn">Ligar Horta 🌱</button>
                 <button id="stopBtn" class="action-btn stop-btn" disabled>Parar Horta 🛑</button>
             </div>
+
+            <!-- Histórico -->
+            <div class="history-section" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    Histórico de Execuções (Última Semana)
+                    <button id="refreshHistoryBtn" style="background: transparent; border: none; color: #4CAF50; cursor: pointer; font-size: 0.8rem;">Atualizar 🔄</button>
+                </h3>
+                <div id="historyList" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                    <p style="color: #666; text-align: center;">Carregando histórico...</p>
+                </div>
+            </div>
+
             <button id="logoutBtn" style="background: transparent; color: #888; font-size: 0.8rem; margin-top: 20px; border: 1px solid #444;">Sair</button>
         </div>
 

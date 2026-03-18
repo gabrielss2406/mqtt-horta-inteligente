@@ -19,4 +19,7 @@ export const config = {
       publish: "device/esp32/control",
     },
   },
+  redis: {
+    url: process.env.REDIS_URL || "redis://localhost:6379",
+  },
 };
