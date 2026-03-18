@@ -25,7 +25,7 @@
             <button id="loginBtn">Entrar 🔐</button>
         </div>
 
-        <!-- Seção de Controle (Escondida inicialmente) -->
+        <!-- Seção de Controle -->
         <div id="control-section" style="display: none;">
             <div class="command-section">
                 <label for="durationInput">Duração (segundos):</label>
@@ -34,22 +34,28 @@
                 <button id="stopBtn" class="action-btn stop-btn" disabled>Parar Horta 🛑</button>
             </div>
 
-            <!-- Histórico -->
-            <div class="history-section" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
-                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    Histórico de Execuções (Última Semana)
-                    <button id="refreshHistoryBtn" style="background: transparent; border: none; color: #4CAF50; cursor: pointer; font-size: 0.8rem;">Atualizar 🔄</button>
-                </h3>
-                <div id="historyList" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
-                    <p style="color: #666; text-align: center;">Carregando histórico...</p>
-                </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="openHistoryBtn" style="background: #333; font-size: 0.9rem;">Ver Histórico 📋</button>
+                <button id="logoutBtn" style="background: transparent; color: #888; font-size: 0.8rem; border: 1px solid #444; width: auto; padding: 0 20px;">Sair</button>
             </div>
-
-            <button id="logoutBtn" style="background: transparent; color: #888; font-size: 0.8rem; margin-top: 20px; border: 1px solid #444;">Sair</button>
         </div>
 
         <div id="responseOutput" class="response-area"></div>
     </main>
+</div>
+
+<!-- Modal de Histórico -->
+<div id="historyModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Histórico (7 dias)</h2>
+            <button id="closeHistoryBtn" class="close-modal-btn">&times;</button>
+        </div>
+        <div id="historyList" class="history-list">
+            <p style="color: #666; text-align: center; margin-top: 20px;">Carregando...</p>
+        </div>
+        <button id="refreshHistoryBtn" style="margin-top: 15px; background: #222; font-size: 0.8rem; padding: 0.8rem;">Atualizar 🔄</button>
+    </div>
 </div>
 
 <script src="js/script.js"></script>

@@ -4,18 +4,38 @@ let activeTimer = null;
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    if (checkAuthStatus()) {
-        fetchHistory();
-    }
+    checkAuthStatus();
     
     checkHealth();
     setInterval(checkHealth, 5000);
 
+    // Auth
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('logoutBtn').addEventListener('click', logout);
+    
+    // Commands
     document.getElementById('executeBtn').addEventListener('click', sendExecutionCommand);
     document.getElementById('stopBtn').addEventListener('click', sendStopCommand);
+    
+    // History Modal
+    const historyModal = document.getElementById('historyModal');
+    document.getElementById('openHistoryBtn').addEventListener('click', () => {
+        historyModal.style.display = 'flex';
+        fetchHistory();
+    });
+    
+    document.getElementById('closeHistoryBtn').addEventListener('click', () => {
+        historyModal.style.display = 'none';
+    });
+    
     document.getElementById('refreshHistoryBtn').addEventListener('click', fetchHistory);
+    
+    // Fechar ao clicar fora do modal
+    window.addEventListener('click', (event) => {
+        if (event.target === historyModal) {
+            historyModal.style.display = 'none';
+        }
+    });
 });
 
 // === Gerenciamento de Autenticação ===
@@ -60,9 +80,7 @@ async function login() {
 
         localStorage.setItem('token', data.token);
         passwordInput.value = "";
-        if (checkAuthStatus()) {
-            fetchHistory();
-        }
+        checkAuthStatus();
         output.style.display = 'none';
     } catch (err) {
         output.innerHTML = `<strong>Erro:</strong> ${err.message}`;
@@ -113,22 +131,27 @@ async function fetchHistory() {
         if (!res.ok) throw new Error(data.error || "Erro ao carregar histórico");
 
         if (data.length === 0) {
-            historyList.innerHTML = '<p style="color: #666; text-align: center;">Nenhuma execução registrada.</p>';
+            historyList.innerHTML = '<p style="color: #666; text-align: center; margin-top: 20px;">Nenhuma execução recente.</p>';
             return;
         }
 
         historyList.innerHTML = data.map(item => {
-            const date = new Date(item.timestamp).toLocaleString('pt-BR');
+            const dateObj = new Date(item.timestamp);
+            const dataStr = dateObj.toLocaleDateString('pt-BR');
+            const horaStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
             return `
-                <div style="padding: 8px; border-bottom: 1px solid #222; display: flex; justify-content: space-between;">
-                    <span style="color: #4CAF50;">🌱 Ativação</span>
-                    <span style="color: #ccc;">${item.duration}s</span>
-                    <span style="color: #888; font-size: 0.75rem;">${date}</span>
+                <div class="history-item">
+                    <div class="history-item-info">
+                        <span style="color: #81c784;">🌱 Ativação (${item.duration}s)</span>
+                        <span class="history-item-time">${dataStr} às ${horaStr}</span>
+                    </div>
+                    <span style="color: #555; font-size: 0.8rem;">#${item.timestamp.toString().slice(-4)}</span>
                 </div>
             `;
         }).join('');
     } catch (err) {
-        historyList.innerHTML = `<p style="color: #ff5252; text-align: center;">Erro: ${err.message}</p>`;
+        historyList.innerHTML = `<p style="color: #ff5252; text-align: center; margin-top: 20px;">Erro: ${err.message}</p>`;
     }
 }
 
@@ -167,10 +190,6 @@ async function sendCommand(payload) {
 
         output.innerHTML = `<strong>Sucesso!</strong><br>${JSON.stringify(result, null, 2)}`;
         output.style.display = 'block';
-
-        if (payload.mode === 'execution') {
-            fetchHistory();
-        }
 
         return true; 
     } catch (err) {
